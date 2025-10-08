@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI-Powered CV Screening Platform</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --primary-500:#0ea5e9; --primary-600:#0284c7; --primary-700:#0369a1;
+      --secondary-50:#f8fafc; --secondary-100:#f1f5f9; --secondary-200:#e5e7eb;
+      --secondary-300:#d1d5db; --secondary-500:#64748b; --secondary-600:#475569;
+      --secondary-700:#334155; --secondary-900:#0f172a;
+      --success-50:#f0fdf4; --success-600:#16a34a;
+      --error-50:#fef2f2; --error-600:#dc2626;
+      --radius-md:.5rem; --radius-lg:.75rem; --radius-xl:1rem; --radius-2xl:1.5rem; --radius-full:9999px;
+      --shadow-md:0 4px 6px -1px rgb(0 0 0 / .1), 0 2px 4px -2px rgb(0 0 0 / .1);
+      --shadow-lg:0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
+      --gradient-primary:linear-gradient(135deg,#3b82f6,#8b5cf6);
+      --font:'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    *{box-sizing:border-box} body{margin:0;font-family:var(--font);color:var(--secondary-900);background:#fff;line-height:1.55}
+
+    /* Header */
+    .header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--secondary-200);z-index:10}
+    .header-inner{max-width:1200px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:700;color:var(--primary-600)}
+    .logo-icon{width:32px;height:32px;border-radius:10px;background:var(--gradient-primary);display:grid;place-items:center;color:#fff}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:12px;padding:10px 16px;font-weight:600;cursor:pointer;transition:.2s}
+    .btn-primary{background:var(--gradient-primary);color:#fff;box-shadow:var(--shadow-md)}
+    .btn-primary:hover{transform:translateY(-1px)}
+    .btn-ghost{background:#fff;border:1px solid var(--secondary-200);color:var(--secondary-700)}
+    .btn-ghost:hover{background:var(--secondary-50)}
+
+    /* Layout */
+    .container{max-width:1200px;margin:0 auto;padding:32px 24px}
+    .hero{text-align:center;margin-bottom:36px}
+    .hero h1{font-size:2.2rem;margin:0 0 8px}
+    .hero p{color:var(--secondary-600);max-width:640px;margin:0 auto}
+
+    /* Upload Section (Home) */
+    #sectionUpload .card{max-width:680px;margin:24px auto;background:#fff;border:1px solid var(--secondary-200);
+      border-radius:24px;padding:28px;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+    .drop{border:2px dashed var(--secondary-300);border-radius:16px;padding:40px;display:flex;flex-direction:column;align-items:center;gap:14px;background:var(--secondary-50);cursor:pointer;transition:.25s}
+    .drop:hover{border-color:#3b82f6;background:#f0f9ff;transform:translateY(-1px)}
+    .drop input{display:none}
+    .upload-icon{width:72px;height:72px;border-radius:50%;background:var(--gradient-primary);display:grid;place-items:center;color:#fff;font-size:28px;box-shadow:var(--shadow-lg)}
+    .muted{color:var(--secondary-600);font-size:.95rem}
+    .features{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;color:var(--secondary-600);font-size:.9rem}
+    .cv-preview{display:none;margin-top:16px;border:1px solid var(--secondary-200);border-radius:12px;padding:14px;background:#fff}
+    .cv-preview.show{display:block;animation:fadeIn .35s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .start-wrap{text-align:center;margin-top:18px}
+    .start-btn{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:14px;padding:12px 18px;font-weight:700;cursor:pointer;box-shadow:var(--shadow-md)}
+    .start-btn:hover{transform:translateY(-1px)}
+
+    /* Wizard */
+    .wizard{max-width:1000px;margin:0 auto 24px;background:#fff;border:1px solid var(--secondary-200);border-radius:24px;box-shadow:var(--shadow-md);overflow:hidden;position:relative}
+    .quit{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:999px;border:none;background:#ef4444;color:#fff;cursor:pointer}
+    .quit:hover{background:#dc2626;transform:scale(1.05)}
+    .wiz-head{background:var(--gradient-primary);color:#fff;text-align:center;padding:28px}
+    .wiz-title{margin:0 0 6px;font-size:1.4rem}
+    .prog{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+    .pill{display:flex;gap:8px;align-items:center;background:rgba(255,255,255,.18);padding:6px 10px;border-radius:999px;font-weight:600}
+    .pill.active{background:rgba(255,255,255,.3)}
+    .pill.done{background:#fff;color:#3b82f6}
+    .wiz-body{padding:24px;min-height:380px}
+    .step{display:none;animation:fadeIn .35s ease}
+    .step.active{display:block}
+    .dots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+    .dot{width:10px;height:10px;border-radius:999px;background:#d1d5db}
+    .dot.active{background:#3b82f6;transform:scale(1.15)}
+    .dot.done{background:#10b981}
+    .card{background:#fff;border:1px solid var(--secondary-200);border-radius:18px;padding:16px;margin-bottom:16px}
+    .card h3{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+    .criteria-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+    .criteria-item{border:1px solid var(--secondary-200);border-radius:12px;background:var(--secondary-50);padding:12px}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .name{font-weight:600;min-width:200px;flex:1}
+    .rating{padding:6px 8px;border:1px solid var(--secondary-300);border-radius:8px;background:#fff}
+    .acts{display:flex;gap:6px}
+    .icon-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--secondary-200);background:#fff;cursor:pointer}
+    .icon-btn:hover{background:var(--secondary-100)}
+    .icon-btn.dislike.active{background:var(--error-50);border-color:var(--error-600);color:var(--error-600)}
+    .reason{display:none;margin-top:8px}
+    .reason.show{display:block}
+    .reason textarea{width:100%;min-height:70px;border:1px solid var(--secondary-300);border-radius:8px;padding:8px;font-family:inherit}
+    .addbar{display:flex;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--secondary-200)}
+    .addbar select{flex:1;border:1px solid var(--secondary-300);border-radius:8px;padding:8px;background:#fff}
+
+    .wiz-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:#f9fafb;border-top:1px solid var(--secondary-200)}
+    .wiz-btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}
+    .wiz-btn.primary{background:var(--gradient-primary);color:#fff}
+    .wiz-btn.secondary{background:#fff;border:1px solid var(--secondary-300);color:var(--secondary-700)}
+    .wiz-btn:disabled{opacity:.55;cursor:not-allowed}
+
+    /* Completion */
+    .done{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--secondary-200);border-radius:24px;box-shadow:var(--shadow-md);text-align:center;overflow:hidden}
+    .done-body{padding:36px}
+    .tick{width:84px;height:84px;border-radius:999px;margin:0 auto 12px;background:linear-gradient(135deg,#10b981,#059669);display:grid;place-items:center;color:#fff;font-size:34px;animation:bounce .6s ease}
+    @keyframes bounce{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(.9)}100%{transform:scale(1);opacity:1}}
+    .upload-new{margin-top:14px;background:var(--gradient-primary);color:#fff;border:none;border-radius:14px;padding:12px 18px;font-weight:700;cursor:pointer}
+
+    /* Utils */
+    .hidden{display:none!important}
+    .status{display:flex;align-items:center;gap:10px;background:var(--success-50);border:1px solid #bbf7d0;color:var(--success-600);padding:10px;border-radius:10px}
+    .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:10px;box-shadow:var(--shadow-lg);opacity:.98}
+    @media (max-width:768px){.row{flex-direction:column;align-items:stretch}}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-brain"></i></div>
+        <span>AI Screening Platform</span>
+      </div>
+      <div>
+        <button class="btn btn-ghost"><i class="fa-solid fa-download"></i>Export</button>
+        <button class="btn btn-primary"><i class="fa-solid fa-gear"></i>Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="hero">
+      <h1>AI-Powered CV Screening</h1>
+      <p>Upload a CV and walk through a clean, step-by-step analysis. Quit anytime or start over with a new upload.</p>
+    </div>
+
+    <!-- =================== HOME / UPLOAD =================== -->
+    <section id="sectionUpload">
+      <div class="card">
+        <label class="drop" for="fileInput" id="dropLabel">
+          <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <div style="font-weight:700">Drop your CV here or click to browse</div>
+          <div class="muted">PDF, DOC or DOCX • up to 10MB</div>
+          <div class="features">
+            <span><i class="fa-solid fa-shield-halved" style="color:#10b981"></i> Secure</span>
+            <span><i class="fa-solid fa-bolt" style="color:#10b981"></i> Fast</span>
+            <span><i class="fa-solid fa-lock" style="color:#10b981"></i> Private</span>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf,.doc,.docx">
+        </label>
+
+        <div id="uploadSuccess" class="cv-preview">
+          <div class="status" role="status" aria-live="polite">
+            <i class="fa-solid fa-circle-check"></i>
+            <div>
+              <div style="font-weight:700">File uploaded successfully</div>
+              <div class="muted">Ready for AI analysis</div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+            <span id="fileName" style="font-weight:600"></span>
+            <span id="fileMeta" class="muted"></span>
+          </div>
+        </div>
+
+        <div class="start-wrap hidden" id="startWrap">
+          <button class="start-btn" id="btnStart"><i class="fa-solid fa-play"></i> Start CV Analysis</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== WIZARD =================== -->
+    <section id="wizardContainer" class="wizard hidden" aria-hidden="true">
+      <button id="btnQuit" class="quit" title="Quit analysis" aria-label="Quit analysis"><i class="fa-solid fa-xmark"></i></button>
+      <div class="wiz-head">
+        <h2 class="wiz-title">CV Analysis Wizard</h2>
+        <div class="muted">Navigate with Previous / Next. Finish to complete.</div>
+        <div class="prog" id="progPills">
+          <div class="pill" id="pill1"><i class="fa-solid fa-upload"></i> Upload</div>
+          <div class="pill" id="pill2"><i class="fa-solid fa-industry"></i> Industry</div>
+          <div class="pill" id="pill3"><i class="fa-solid fa-briefcase"></i> Functions</div>
+          <div class="pill" id="pill4"><i class="fa-solid fa-cogs"></i> Competences</div>
+          <div class="pill" id="pill5"><i class="fa-solid fa-language"></i> Languages</div>
+          <div class="pill" id="pill6"><i class="fa-solid fa-globe"></i> International</div>
+          <div class="pill" id="pill7"><i class="fa-solid fa-graduation-cap"></i> Education</div>
+        </div>
+      </div>
+
+      <div class="wiz-body">
+        <!-- Step 1: Loading -->
+        <div class="step active" id="step1">
+          <div style="text-align:center;padding:32px 0">
+            <div class="loading" style="width:48px;height:48px;border:4px solid #e5e7eb;border-top:4px solid #3b82f6;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite"></div>
+            <h3>Analyzing your CV…</h3>
+            <p class="muted">Extracting key info and preparing criteria.</p>
+          </div>
+        </div>
+
+        <!-- Step 2: Industry -->
+        <div class="step" id="step2">
+          <div class="dots" aria-hidden="true">
+            <div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+          <div class="card">
+            <h3><i class="fa-solid fa-industry"></i> Industry Knowledge</h3>
+            <ul class="criteria-list" id="industryList">
+              <li class="criteria-item">
+                <div class="row">
+                  <div class="name">N10 – Business economy (B2B services)</div>
+                  <select class="rating" title="Rate 1 (bad) to 5 (good)">
+                    <option value="">Rate…</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                  </select>
+                  <div class="acts">
+                    <button class="icon-btn dislike" title="Dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                    <button class="icon-btn delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+                <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+              </li>
+            </ul>
+            <div class="addbar">
+              <select id="industrySelect">
+                <option value="">Add new industry…</option>
+                <option>N20 – Renewable Energy</option>
+                <option>G15 – Software Development</option>
+              </select>
+              <button class="btn btn-primary add-btn" data-target="industryList"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Functions -->
+        <div class="step" id="step3">
+          <div class="dots"><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="card">
+            <h3><i class="fa-solid fa-briefcase"></i> Job Functions</h3>
+            <ul class="criteria-list" id="functionsList">
+              <li class="criteria-item">
+                <div class="row">
+                  <div class="name">110 CEO</div>
+                  <select class="rating"><option value="">Rate…</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+                  <div class="acts">
+                    <button class="icon-btn dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                    <button class="icon-btn delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+                <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+              </li>
+            </ul>
+            <div class="addbar">
+              <select id="functionsSelect">
+                <option value="">Add new function…</option>
+                <option>220 Chief Technology Officer</option>
+                <option>330 Marketing Director</option>
+              </select>
+              <button class="btn btn-primary add-btn" data-target="functionsList"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Competences -->
+        <div class="step" id="step4">
+          <div class="dots"><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="card">
+            <h3><i class="fa-solid fa-cogs"></i> Key Competences</h3>
+            <ul class="criteria-list" id="competencesList">
+              <li class="criteria-item">
+                <div class="row">
+                  <div class="name">0120 – Top line growth</div>
+                  <div class="acts">
+                    <button class="icon-btn dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                    <button class="icon-btn delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+                <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+              </li>
+            </ul>
+            <div class="addbar">
+              <select id="competencesSelect">
+                <option value="">Add new competence…</option>
+                <option>0450 – Automation & Robotics</option>
+                <option>0850 – Risk Management</option>
+              </select>
+              <button class="btn btn-primary add-btn" data-target="competencesList"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Languages -->
+        <div class="step" id="step5">
+          <div class="dots"><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div><div class="dot"></div></div>
+          <div class="card">
+            <h3><i class="fa-solid fa-language"></i> Language Skills</h3>
+            <ul class="criteria-list" id="languageList">
+              <li class="criteria-item">
+                <div class="row">
+                  <div class="name">English</div>
+                  <select class="rating"><option value="">Rate…</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+                  <div class="acts">
+                    <button class="icon-btn dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                    <button class="icon-btn delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+                <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+              </li>
+            </ul>
+            <div class="addbar">
+              <select id="languageSelect">
+                <option value="">Add new language…</option>
+                <option>Spanish</option><option>French</option><option>Italian</option>
+              </select>
+              <button class="btn btn-primary add-btn" data-target="languageList"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6: International -->
+        <div class="step" id="step6">
+          <div class="dots"><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot active"></div></div>
+          <div class="card">
+            <h3><i class="fa-solid fa-globe"></i> International Experience</h3>
+            <ul class="criteria-list" id="internationalList">
+              <li class="criteria-item">
+                <div class="row">
+                  <div class="name">Italy</div>
+                  <div class="acts">
+                    <button class="icon-btn dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                    <button class="icon-btn delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+                <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+              </li>
+            </ul>
+            <div class="addbar">
+              <select id="internationalSelect">
+                <option value="">Add new country…</option>
+                <option>United Kingdom</option><option>United States</option><option>Japan</option>
+              </select>
+              <button class="btn btn-primary add-btn" data-target="internationalList"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 7: Education -->
+        <div class="step" id="step7">
+          <div class="dots"><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div><div class="dot done"></div></div>
+          <div class="card">
+            <h3><i class="fa-solid fa-graduation-cap"></i> Education</h3>
+            <ul class="criteria-list" id="educationList">
+              <li class="criteria-item">
+                <div class="row">
+                  <div class="name">Master’s degree</div>
+                  <div class="acts">
+                    <button class="icon-btn dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                    <button class="icon-btn delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
+                <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+              </li>
+            </ul>
+            <div class="addbar">
+              <select id="educationSelect">
+                <option value="">Add new education…</option>
+                <option>PhD</option><option>Associate degree</option>
+              </select>
+              <button class="btn btn-primary add-btn" data-target="educationList"><i class="fa-solid fa-plus"></i> Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wiz-nav">
+        <button id="btnPrev" class="wiz-btn secondary" disabled><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <div class="muted"><span id="stepCounter">Step 1 of 7</span></div>
+        <button id="btnNext" class="wiz-btn primary">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </section>
+
+    <!-- =================== COMPLETION =================== -->
+    <section id="completionSection" class="done hidden" aria-hidden="true">
+      <div class="done-body">
+        <div class="tick"><i class="fa-solid fa-check"></i></div>
+        <h2 style="margin:6px 0 4px">Analysis Complete!</h2>
+        <p class="muted">Your CV has been successfully analyzed and evaluated.</p>
+        <button id="btnUploadNew" class="upload-new"><i class="fa-solid fa-upload"></i> Upload New CV</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      // --- Elements
+      const sectionUpload = document.getElementById('sectionUpload');
+      const fileInput = document.getElementById('fileInput');
+      const dropLabel = document.getElementById('dropLabel');
+      const uploadSuccess = document.getElementById('uploadSuccess');
+      const fileNameEl = document.getElementById('fileName');
+      const fileMetaEl = document.getElementById('fileMeta');
+      const startWrap = document.getElementById('startWrap');
+      const btnStart = document.getElementById('btnStart');
+
+      const wizard = document.getElementById('wizardContainer');
+      const btnQuit = document.getElementById('btnQuit');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+      const stepCounter = document.getElementById('stepCounter');
+      const completion = document.getElementById('completionSection');
+      const btnUploadNew = document.getElementById('btnUploadNew');
+
+      const steps = Array.from(document.querySelectorAll('.step'));
+      const pills = [1,2,3,4,5,6,7].map(i => document.getElementById('pill'+i));
+
+      let currentStep = 1;
+      const totalSteps = 7;
+
+      // --- Helpers
+      function show(el){ el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); }
+      function hide(el){ el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); }
+
+      function resetToHome(){
+        // Reset upload
+        fileInput.value = '';
+        uploadSuccess.classList.remove('show');
+        startWrap.classList.add('hidden');
+
+        // Hide wizard & completion
+        hide(wizard); hide(completion);
+        // Show upload
+        show(sectionUpload);
+
+        // Reset wizard state
+        setStep(1, true);
+      }
+
+      function validFile(file){
+        const ok = ['pdf','doc','docx'];
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        return ok.includes(ext);
+      }
+
+      function formatBytes(bytes){
+        const mb = (bytes/1024/1024).toFixed(2);
+        return `${mb} MB`;
+      }
+
+      function handleFile(file){
+        if(!validFile(file)){ toast('Please upload a PDF, DOC or DOCX','error'); return; }
+        fileNameEl.textContent = file.name;
+        fileMetaEl.textContent = `${(file.name.split('.').pop() || '').toUpperCase()} • ${formatBytes(file.size)}`;
+        uploadSuccess.classList.add('show');
+        startWrap.classList.remove('hidden');
+        startWrap.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+
+      function toast(msg, type='success'){
+        const n = document.createElement('div');
+        n.className = 'toast';
+        n.style.background = type === 'error' ? '#991b1b' : '#111827';
+        n.innerHTML = msg;
+        document.body.appendChild(n);
+        setTimeout(()=> n.remove(), 2200);
+      }
+
+      // --- Upload events
+      fileInput.addEventListener('change', e => { if(e.target.files?.length) handleFile(e.target.files[0]); });
+
+      // Drag & drop
+      ['dragover','dragenter'].forEach(evt => dropLabel.addEventListener(evt, e => { e.preventDefault(); dropLabel.classList.add('dragover'); }));
+      ['dragleave','drop'].forEach(evt => dropLabel.addEventListener(evt, e => { e.preventDefault(); dropLabel.classList.remove('dragover'); }));
+      dropLabel.addEventListener('drop', e => {
+        const f = e.dataTransfer?.files?.[0];
+        if (f) handleFile(f);
+      });
+
+      // --- Start analysis
+      btnStart.addEventListener('click', () => {
+        hide(sectionUpload); // hide upload area
+        show(wizard);        // show wizard
+        setStep(1, true);    // go to step 1 (loading)
+        // Simulate AI processing then move to step 2
+        setTimeout(()=> { setStep(2); }, 1600);
+      });
+
+      // --- Navigation
+      btnPrev.addEventListener('click', () => { if(currentStep>1) setStep(currentStep-1); });
+      btnNext.addEventListener('click', () => {
+        if(currentStep < totalSteps){ setStep(currentStep+1); }
+        else { // complete
+          hide(wizard);
+          show(completion);
+          completion.scrollIntoView({behavior:'smooth', block:'start'});
+          toast('Analysis completed successfully');
+        }
+      });
+
+      // Quit at any time
+      btnQuit.addEventListener('click', () => { resetToHome(); });
+
+      // Upload new CV from completion
+      btnUploadNew.addEventListener('click', () => { resetToHome(); sectionUpload.scrollIntoView({behavior:'smooth'}); });
+
+      // --- Wizard state
+      function setStep(n, force=false){
+        if (n<1 || n>totalSteps) return;
+        if (!force && n===currentStep) return;
+        currentStep = n;
+
+        // Update step views
+        steps.forEach((el, idx) => el.classList.toggle('active', idx === currentStep-1));
+
+        // Pills
+        pills.forEach((p, idx) => {
+          p.classList.remove('active','done');
+          if (idx < currentStep-1) p.classList.add('done');
+          if (idx === currentStep-1) p.classList.add('active');
+        });
+
+        // Dots in each step
+        document.querySelectorAll('.step').forEach((stepEl, sIdx) => {
+          const dots = stepEl.querySelectorAll('.dot');
+          dots.forEach((d, i) => {
+            d.classList.toggle('done', i < currentStep-1);
+            d.classList.toggle('active', i === currentStep-1);
+          });
+        });
+
+        // Buttons
+        btnPrev.disabled = currentStep === 1;
+        if (currentStep === totalSteps) {
+          btnNext.innerHTML = '<i class="fa-solid fa-check"></i> Complete';
+        } else {
+          btnNext.innerHTML = 'Next <i class="fa-solid fa-arrow-right"></i>';
+        }
+
+        // Counter
+        stepCounter.textContent = `Step ${currentStep} of ${totalSteps}`;
+      }
+
+      // --- Criteria interactions (event delegation)
+      document.addEventListener('click', (e) => {
+        const del = e.target.closest('.delete');
+        const dis = e.target.closest('.dislike');
+        const add = e.target.closest('.add-btn');
+
+        if (del){
+          const item = del.closest('.criteria-item');
+          if (item){ item.style.opacity='0'; item.style.transform='translateX(-10px)'; setTimeout(()=> item.remove(), 200); }
+        }
+
+        if (dis){
+          const item = dis.closest('.criteria-item');
+          dis.classList.toggle('active');
+          const box = item.querySelector('.reason');
+          if (box) box.classList.toggle('show', dis.classList.contains('active'));
+        }
+
+        if (add){
+          const listId = add.getAttribute('data-target');
+          const select = add.previousElementSibling;
+          const val = (select && select.value || '').trim();
+          if (!val) { toast('Please select a value','error'); return; }
+          const list = document.getElementById(listId);
+          if (!list) return;
+
+          const needsRating = ['industryList','functionsList','languageList'].includes(listId);
+          const li = document.createElement('li');
+          li.className = 'criteria-item';
+          li.innerHTML = `
+            <div class="row">
+              <div class="name">${val}</div>
+              ${needsRating ? `
+                <select class="rating">
+                  <option value="">Rate…</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+                </select>` : ''}
+              <div class="acts">
+                <button class="icon-btn dislike" title="Dislike"><i class="fa-solid fa-thumbs-down"></i></button>
+                <button class="icon-btn delete" title="Delete"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+            <div class="reason"><textarea placeholder="Why is this not suitable?"></textarea></div>
+          `;
+          li.style.opacity='0'; li.style.transform='translateY(8px)';
+          list.appendChild(li);
+          setTimeout(()=>{ li.style.transition='all .25s ease'; li.style.opacity='1'; li.style.transform='none'; }, 20);
+          select.value='';
+          toast('Added');
+        }
+      });
+
+      // init
+      resetToHome();
+    })();
+  </script>
+</body>
+</html>
